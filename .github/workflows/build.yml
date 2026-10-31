@@ -8,64 +8,10 @@ on:
       - ".github/workflows/build.yml"
 
 jobs:
-  html5:
-    name: Version HTML5
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
-    steps:
-      - name: Descargar repositorio
-        uses: actions/checkout@v4
-
-      - name: Instalar Haxe
-        uses: krdlab/setup-haxe@v1
-        with:
-          haxe-version: 4.3.6
-
-      - name: Preparar proyecto
-        run: |
-          if [ ! -f game_project.zip ]; then
-            echo "Falta game_project.zip en la raiz del repositorio"
-            exit 1
-          fi
-          SWF="$(ls ./*.swf 2>/dev/null | head -1)"
-          if [ -z "$SWF" ]; then
-            echo "Falta el archivo .swf en la raiz del repositorio"
-            exit 1
-          fi
-          echo "Usando SWF: $SWF"
-          rm -rf game
-          unzip -o game_project.zip -d game
-          mkdir -p game/assets
-          cp "$SWF" game/assets/game.swf
-          ls -R game | head -40
-
-      - name: Instalar librerias de Haxe
-        run: |
-          mkdir -p "$HOME/haxelib"
-          haxelib setup "$HOME/haxelib"
-          haxelib --always install lime
-          haxelib --always install openfl
-          haxelib --always install format || true
-          haxelib --always install actuate || true
-          haxelib git swf https://github.com/openfl/swf || haxelib --always install swf
-          haxelib list
-
-      - name: Compilar HTML5
-        working-directory: game
-        run: haxelib run openfl build html5 -debug
-
-      - name: Subir version HTML5
-        uses: actions/upload-artifact@v4
-        with:
-          name: juego-html5
-          path: game/Export/html5/bin
-          if-no-files-found: error
-
   android:
-    name: APK Android (experimental)
+    name: APK Android
     runs-on: ubuntu-latest
     timeout-minutes: 75
-    continue-on-error: true
     steps:
       - name: Descargar repositorio
         uses: actions/checkout@v4
@@ -106,7 +52,7 @@ jobs:
           haxelib --always install openfl
           haxelib --always install format || true
           haxelib --always install actuate || true
-          haxelib git swf https://github.com/openfl/swf || haxelib --always install swf
+          haxelib --always install swf
           haxelib list
 
       - name: Instalar Android NDK r21e
