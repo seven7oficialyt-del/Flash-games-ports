@@ -50,6 +50,7 @@ jobs:
           haxelib setup "$HOME/haxelib"
           haxelib --always install lime
           haxelib --always install openfl
+          haxelib --always install hxcpp
           haxelib --always install format || true
           haxelib --always install actuate || true
           haxelib --always install swf
