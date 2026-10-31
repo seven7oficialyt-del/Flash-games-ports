@@ -50,7 +50,6 @@ jobs:
           haxelib setup "$HOME/haxelib"
           haxelib --always install lime
           haxelib --always install openfl
-          haxelib --always install hxcpp
           haxelib --always install format || true
           haxelib --always install actuate || true
           haxelib --always install swf
@@ -70,9 +69,24 @@ jobs:
           haxelib run lime config JAVA_HOME "$JAVA_HOME"
           haxelib run lime config ANDROID_SETUP true
 
-      - name: Compilar APK
+      - name: Compilar APK (release, optimizado)
         working-directory: game
-        run: haxelib run openfl build android -debug
+        run: |
+          keytool -genkeypair -keystore "$PWD/k.jks" -alias key -keyalg RSA -keysize 2048 -validity 10000 -storepass android123 -keypass android123 -dname "CN=Juego"
+          sed -i "s#</project>#<certificate path=\"$PWD/k.jks\" alias=\"key\" password=\"android123\" alias-password=\"android123\" if=\"android\" /></project>#" project.xml
+          haxelib run openfl update android -release
+          RES="$(find Export/android -type d -path '*src/main/res' | head -1)"
+          echo "Carpeta res: $RES"
+          mkdir -p "$RES/mipmap-anydpi-v26" "$RES/drawable-nodpi"
+          cp android_icon/ic_launcher_adaptive.png "$RES/drawable-nodpi/ic_launcher_adaptive.png"
+          cat > "$RES/mipmap-anydpi-v26/ic_launcher.xml" << 'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+              <background android:drawable="@drawable/ic_launcher_adaptive"/>
+              <foreground android:drawable="@drawable/ic_launcher_adaptive"/>
+          </adaptive-icon>
+          EOF
+          haxelib run openfl build android -release
 
       - name: Reunir APK
         run: |
